@@ -54,4 +54,62 @@ final class InterfaceUserTests: XCTestCase {
 		XCTAssertEqual(steps[1].seconds, 0.50, accuracy: 1e-9)
 		XCTAssertEqual(steps[2].seconds, 1.10, accuracy: 1e-9)
 	}
+	
+	func testDesktopUser_FittsParameterizedP() throws {
+		// ID = log2(D/W + 1) with D=2, W=4 => log2(1.5) ≈ 0.5849625
+		// Desktop defaults: a=0.05, b=0.10 -> MT ≈ 0.05 + 0.10*0.5849625 = 0.10849625
+		let u = DesktopUser()
+		let total = try u.taskTime(for: "M P_distance:2;width:4 B")
+		let expectedP = 0.05 + 0.10 * log2(2.0 / 4.0 + 1.0)
+		let expected = 1.35 + expectedP + 0.28
+		XCTAssertEqual(total, expected, accuracy: 1e-9)
+	}
+	
+	func testPlainPStillUsesNominal() throws {
+		let u = DesktopUser()
+		let total = try u.taskTime(for: "P")
+		XCTAssertEqual(total, 1.10, accuracy: 1e-9)
+	}
+	
+	func testWearableUser_FittsParameterizedP_UsesWearableAB() throws {
+		// Wearable defaults: a=0.10, b=0.20
+		let u = WatchUser()
+		let total = try u.taskTime(for: "P_distance:2;width:4")
+		let expected = 0.10 + 0.20 * log2(2.0 / 4.0 + 1.0)
+		XCTAssertEqual(total, expected, accuracy: 1e-9)
+	}
+	
+	func testFittsMissingParamsThrows() {
+		let u = DesktopUser()
+		XCTAssertThrowsError(try u.taskTime(for: "P_distance:2")) { err in
+			XCTAssertEqual(err as? KLMError, .missingFittsParams("P_distance:2"))
+		}
+		XCTAssertThrowsError(try u.taskTime(for: "P_width:3")) { err in
+			XCTAssertEqual(err as? KLMError, .missingFittsParams("P_width:3"))
+		}
+	}
+	
+	func testFittsNonPositiveThrows() {
+		let u = DesktopUser()
+		XCTAssertThrowsError(try u.taskTime(for: "P_distance:0;width:2")) { err in
+			XCTAssertEqual(err as? KLMError, .nonPositiveFittsParams("P_distance:0;width:2"))
+		}
+		XCTAssertThrowsError(try u.taskTime(for: "P_distance:2;width:0")) { err in
+			XCTAssertEqual(err as? KLMError, .nonPositiveFittsParams("P_distance:2;width:0"))
+		}
+	}
+	
+	func testTokenizationAcceptsCommasSpacesForParameterizedP() throws {
+		let u = DesktopUser()
+		let tokens = u.tokenize(" M,  P_distance:2;width:4  ,B ")
+		XCTAssertEqual(tokens, ["M", "P_distance:2;width:4", "B"])
+	}
+	
+	func testBreakdownIncludesParameterizedPValue() throws {
+		let u = DesktopUser()
+		let steps = try u.breakdown(for: "K P_distance:2;width:4")
+		XCTAssertEqual(steps.map { $0.token }, ["K", "P_distance:2;width:4"])
+		// sanity check: P time within reasonable range
+		XCTAssertTrue(steps[1].seconds > 0.05 && steps[1].seconds < 0.20)
+	}
 }
