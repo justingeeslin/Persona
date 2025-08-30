@@ -185,7 +185,10 @@ public struct DesktopOriginalFittsUser: InterfaceUser, OriginalFittsUser {}
 /// Desktop + Welford
 public struct DesktopWelfordUser: InterfaceUser, WelfordFittsUser {}
 
-public struct DesktopUser: InterfaceUser { /* uses default map */ }
+public struct DesktopUser: InterfaceUser { 
+	public init() {}
+}
+
 /// Wearable + Shannon (explicit)
 public struct WatchShannonUser: WearableInterfaceUser, ShannonFittsUser {}
 
