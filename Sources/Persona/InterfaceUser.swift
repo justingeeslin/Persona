@@ -190,6 +190,8 @@ public struct DesktopUser: InterfaceUser { /* uses default map */ }
 /// Wearable + Shannon (explicit)
 public struct WatchShannonUser: WearableInterfaceUser, ShannonFittsUser {}
 
-public struct WatchUser: WearableInterfaceUser { /* uses wearable map */ }
+public struct WatchUser: WearableInterfaceUser { 
+	public init() {}
+}
 /// Wearable + Original Fitts
 public struct WatchOriginalFittsUser: WearableInterfaceUser, OriginalFittsUser {}
