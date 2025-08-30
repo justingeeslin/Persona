@@ -60,7 +60,6 @@ public extension InterfaceUser {
 		try breakdown(for: actionString).reduce(0) { $0 + $1.seconds }
 	}
 
-	// public helpers --------------------------------------------------------
 	func breakdown(for actionString: String) throws -> [(token: String, seconds: Double)] {
 		let tokens = tokenize(actionString)
 		var out: [(String, Double)] = []
