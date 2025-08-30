@@ -60,8 +60,8 @@ public extension InterfaceUser {
 		try breakdown(for: actionString).reduce(0) { $0 + $1.seconds }
 	}
 
-	// INTERNAL helpers --------------------------------------------------------
-	internal func breakdown(for actionString: String) throws -> [(token: String, seconds: Double)] {
+	// public helpers --------------------------------------------------------
+	func breakdown(for actionString: String) throws -> [(token: String, seconds: Double)] {
 		let tokens = tokenize(actionString)
 		var out: [(String, Double)] = []
 
@@ -93,7 +93,7 @@ public extension InterfaceUser {
 		return out
 	}
 
-	internal func fittsTime(from token: String) throws -> Double {
+	func fittsTime(from token: String) throws -> Double {
 		let paramsPart = token.dropFirst(2) // strip "P_"
 		let pairs = paramsPart.split(separator: ";").map { String($0) }
 
@@ -120,7 +120,7 @@ public extension InterfaceUser {
 		return fittsA + fittsB * id
 	}
 
-	internal func tokenize(_ s: String) -> [String] {
+	func tokenize(_ s: String) -> [String] {
 		s.split(whereSeparator: { $0 == " " || $0 == "," })
 		 .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
 		 .filter { !$0.isEmpty }

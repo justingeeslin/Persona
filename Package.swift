@@ -7,10 +7,12 @@ let package = Package(
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "Persona", targets: ["Persona"]),
+        // Library product so other apps can import Persona
+        .library(name: "Persona", targets: ["Persona"]),
     ],
     targets: [
-        .executableTarget(
+        // Library target (module name = "Persona")
+        .target(
             name: "Persona",
             path: "Sources/Persona"
         ),
