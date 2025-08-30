@@ -36,19 +36,20 @@ public protocol InterfaceUser {
 
 // MARK: - Default implementation (desktop baseline + Shannon ID)
 public extension InterfaceUser {
+	// Basic KLM operators; Kieras 1993
 	var klmOperatorTimes: [String: Double] {
 		[
 			"K": 0.28,
-			"P": 1.10,  // nominal fallback when P is unparameterized
+			"P": 1.10,
 			"H": 0.40,
-			"M": 1.35,
-			"B": 0.28
+			"M": 1.2,
+			"B": 0.1
 		]
 	}
 
-	// Typical mouse-ish defaults
-	var fittsA: Double { 0.05 } // 50 ms
-	var fittsB: Double { 0.10 } // 100 ms per bit
+	// Mouse a and b; Card et al, 1978
+	var fittsA: Double { 1.03 } 
+	var fittsB: Double { 0.096 } 
 
 	/// Shannon formulation (most common in HCI):
 	/// ID = log2(D/W + 1)
@@ -126,6 +127,15 @@ public extension InterfaceUser {
 	}
 }
 
+public protocol MouseInterfaceUser : InterfaceUser {}
+
+public protocol JoystickInterfaceUser : InterfaceUser {}
+public extension JoystickInterfaceUser {
+	// Joystick a and b; Card et al, 1978
+	var fittsA: Double { 0.99 }
+	var fittsB: Double { 0.220 } 
+}
+
 // MARK: - Derived trait for wearables
 public protocol WearableInterfaceUser: InterfaceUser {}
 
@@ -185,7 +195,7 @@ public struct DesktopOriginalFittsUser: InterfaceUser, OriginalFittsUser {}
 /// Desktop + Welford
 public struct DesktopWelfordUser: InterfaceUser, WelfordFittsUser {}
 
-public struct DesktopUser: InterfaceUser { 
+public struct DesktopUser: MouseInterfaceUser { 
 	public init() {}
 }
 

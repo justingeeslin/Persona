@@ -13,18 +13,18 @@ final class FittsVariantsTests: XCTestCase {
 	let originalID = log2(20.0)
 
 	func testDesktopShannonParameterizedP() throws {
-		let u = DesktopShannonUser() // a=0.05, b=0.10
+		let u = DesktopShannonUser()
 		let total = try u.taskTime(for: "M P_distance:120;width:12 B")
-		let expectedP = 0.05 + 0.10 * shannonID
-		let expected = 1.35 + expectedP + 0.28
+		let expectedP = 1.03 + 0.096 * shannonID
+		let expected = 1.2 + expectedP + 0.1
 		XCTAssertEqual(total, expected, accuracy: 1e-9)
 	}
 
 	func testDesktopOriginalFittsParameterizedP() throws {
-		let u = DesktopOriginalFittsUser() // a=0.05, b=0.10
+		let u = DesktopOriginalFittsUser() 
 		let total = try u.taskTime(for: "M P_distance:120;width:12 B")
-		let expectedP = 0.05 + 0.10 * originalID
-		let expected = 1.35 + expectedP + 0.28
+		let expectedP = 1.03 + 0.096 * originalID
+		let expected = 1.2 + expectedP + 0.1
 		XCTAssertEqual(total, expected, accuracy: 1e-9)
 	}
 

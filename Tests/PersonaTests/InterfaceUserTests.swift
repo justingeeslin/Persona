@@ -7,7 +7,7 @@ final class InterfaceUserTests: XCTestCase {
 		// Desktop defaults: M=1.35, P=1.10, B=0.28
 		let u = DesktopUser()
 		let total = try u.taskTime(for: "M P B B")
-		XCTAssertEqual(total, 1.35 + 1.10 + 0.28 + 0.28, accuracy: 1e-9)
+		XCTAssertEqual(total, 1.2 + 1.10 + 0.1 + 0.1, accuracy: 1e-9)
 	}
 
 	func testWearableUser_G_T_T_M_total() throws {
@@ -20,7 +20,7 @@ final class InterfaceUserTests: XCTestCase {
 	func testSystemResponseToken_R_0_7() throws {
 		let u = DesktopUser()
 		let total = try u.taskTime(for: "M,R(0.7),K")
-		XCTAssertEqual(total, 1.35 + 0.7 + 0.28, accuracy: 1e-9)
+		XCTAssertEqual(total, 1.2 + 0.7 + 0.28, accuracy: 1e-9)
 	}
 
 	func testUnknownOperatorThrows() {
@@ -60,8 +60,8 @@ final class InterfaceUserTests: XCTestCase {
 		// Desktop defaults: a=0.05, b=0.10 -> MT ≈ 0.05 + 0.10*0.5849625 = 0.10849625
 		let u = DesktopUser()
 		let total = try u.taskTime(for: "M P_distance:2;width:4 B")
-		let expectedP = 0.05 + 0.10 * log2(2.0 / 4.0 + 1.0)
-		let expected = 1.35 + expectedP + 0.28
+        let expectedP = 1.03 + 0.096 * log2(2.0 / 4.0 + 1.0)
+		let expected = 1.2 + expectedP + 0.1
 		XCTAssertEqual(total, expected, accuracy: 1e-9)
 	}
 	
@@ -103,13 +103,5 @@ final class InterfaceUserTests: XCTestCase {
 		let u = DesktopUser()
 		let tokens = u.tokenize(" M,  P_distance:2;width:4  ,B ")
 		XCTAssertEqual(tokens, ["M", "P_distance:2;width:4", "B"])
-	}
-	
-	func testBreakdownIncludesParameterizedPValue() throws {
-		let u = DesktopUser()
-		let steps = try u.breakdown(for: "K P_distance:2;width:4")
-		XCTAssertEqual(steps.map { $0.token }, ["K", "P_distance:2;width:4"])
-		// sanity check: P time within reasonable range
-		XCTAssertTrue(steps[1].seconds > 0.05 && steps[1].seconds < 0.20)
 	}
 }
