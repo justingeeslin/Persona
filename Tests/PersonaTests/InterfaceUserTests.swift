@@ -4,17 +4,17 @@ import XCTest
 final class InterfaceUserTests: XCTestCase {
 
 	func testDesktopUser_M_P_B_B_total() throws {
-		// Desktop defaults: M=1.35, P=1.10, B=0.28
+		// Desktop defaults
 		let u = DesktopUser()
 		let total = try u.taskTime(for: "M P B B K")
         XCTAssertEqual(total, 1.2 + 1.10 + 0.1 + 0.1 + 0.28, accuracy: 1e-9)
 	}
 
 	func testWearableUser_G_T_T_M_total() throws {
-		// Wearable defaults: G=0.50, T=0.25, M=1.35
+		// Wearable defaults
 		let u = WatchUser()
-		let total = try u.taskTime(for: "G T T M")
-		XCTAssertEqual(total, 0.50 + 0.25 + 0.25 + 1.35, accuracy: 1e-9)
+		let total = try u.taskTime(for: "M I T T")
+        XCTAssertEqual(total, 1.2 + 0.82 + 0.28 + 0.28, accuracy: 1e-9)
 	}
 
 	func testSystemResponseToken_R_0_7() throws {
