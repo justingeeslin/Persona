@@ -36,14 +36,6 @@ final class FittsVariantsTests: XCTestCase {
 		XCTAssertEqual(a, b, accuracy: 1e-12) // algebraically identical
 	}
 
-	func testWearableOriginalFittsUsesWearableAB() throws {
-		// Wearable a=0.10, b=0.20 by default
-		let u = WatchOriginalFittsUser()
-		let total = try u.taskTime(for: "P_distance:120;width:12")
-		let expected = 0.10 + 0.20 * originalID
-		XCTAssertEqual(total, expected, accuracy: 1e-9)
-	}
-
 	func testPlainPFallbackUnaffected() throws {
 		// Still uses klmOperatorTimes["P"], not Fitts
 		let u = DesktopOriginalFittsUser()

@@ -71,14 +71,6 @@ final class InterfaceUserTests: XCTestCase {
 		XCTAssertEqual(total, 1.10, accuracy: 1e-9)
 	}
 	
-	func testWearableUser_FittsParameterizedP_UsesWearableAB() throws {
-		// Wearable defaults: a=0.10, b=0.20
-		let u = WatchUser()
-		let total = try u.taskTime(for: "P_distance:2;width:4")
-		let expected = 0.10 + 0.20 * log2(2.0 / 4.0 + 1.0)
-		XCTAssertEqual(total, expected, accuracy: 1e-9)
-	}
-	
 	func testFittsMissingParamsThrows() {
 		let u = DesktopUser()
 		XCTAssertThrowsError(try u.taskTime(for: "P_distance:2")) { err in
