@@ -42,13 +42,14 @@ public extension InterfaceUser {
     // Basic KLM operators; Kieras 1993
     var baseKLMOperatorTimes: [String: Double] {
         [
-            "K": 0.28,
-            "P": 1.10,
-            "H": 0.40,
             "M": 1.2,
-            "B": 0.1
+            "H": 0.40,
         ]
     }
+    
+    // Mouse a and b; Card et al, 1978; Is this appropriate? Yes, for now.
+    var fittsA: Double { 1.03 }
+    var fittsB: Double { 0.096 }
 
     /// Override or extend operator timings. Keys are compared UPPERCASED.
     var klmOperatorOverrides: [String: Double] { [:] }
@@ -61,10 +62,6 @@ public extension InterfaceUser {
         }
         return merged
     }
-
-    // Mouse a and b; Card et al, 1978
-    var fittsA: Double { 1.03 }
-    var fittsB: Double { 0.096 }
 
     /// Shannon formulation (most common in HCI):
     /// ID = log2(D/W + 1)
@@ -142,9 +139,25 @@ public extension InterfaceUser {
     }
 }
 
-public protocol MouseInterfaceUser : InterfaceUser {}
+public protocol MouseKeyboardInterfaceUser : InterfaceUser {}
+public extension MouseKeyboardInterfaceUser {
+    // Mouse a and b; Card et al, 1978
+    var fittsA: Double { 1.03 }
+    var fittsB: Double { 0.096 }
+    
+    // Basic KLM operators; Kieras 1993
+    var klmOperatorOverrides: [String: Double] {
+        [
+            "K": 0.28,
+            "P": 1.10,
+            "H": 0.40,
+            "B": 0.1
+        ]
+    }
+}
 
-public protocol JoystickInterfaceUser : InterfaceUser {}
+// Same operators as MouseKeyboard, but with different a and b
+public protocol JoystickInterfaceUser : MouseKeyboardInterfaceUser {}
 public extension JoystickInterfaceUser {
     // Joystick a and b; Card et al, 1978
     var fittsA: Double { 0.99 }
@@ -193,9 +206,13 @@ public extension MobileInterfaceUser {
     var klmOperatorOverrides: [String: Double] {
         [
             // Mobile-specific additions; Lee et al. 2015
+            // Tap
             "T": 0.31,
+            // Point
             "P": 0.43,
+            // Drag
             "D": 0.17,
+            // Flick (left to right) (right to left is 0.12)
             "F": 0.11,
         ]
     }
@@ -234,20 +251,17 @@ public extension WelfordFittsUser {
 // MARK: - Example concrete conformers ----------------------------------------
 
 /// Desktop + Shannon (explicit)
-public struct DesktopShannonUser: InterfaceUser, ShannonFittsUser {}
+public struct DesktopShannonUser: MouseKeyboardInterfaceUser, ShannonFittsUser {}
 
 /// Desktop + Original Fitts
-public struct DesktopOriginalFittsUser: InterfaceUser, OriginalFittsUser {}
+public struct DesktopOriginalFittsUser: MouseKeyboardInterfaceUser, OriginalFittsUser {}
 
 /// Desktop + Welford
-public struct DesktopWelfordUser: InterfaceUser, WelfordFittsUser {}
+public struct DesktopWelfordUser: MouseKeyboardInterfaceUser, WelfordFittsUser {}
 
-public struct DesktopUser: MouseInterfaceUser {
+public struct DesktopUser: MouseKeyboardInterfaceUser {
     public init() {}
 }
-
-/// Wearable + Shannon (explicit)
-public struct WatchShannonUser: WearableInterfaceUser, ShannonFittsUser {}
 
 public struct WatchUser: WatchInterfaceUser {
     public init() {}
