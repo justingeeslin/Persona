@@ -184,6 +184,26 @@ public extension WatchInterfaceUser {
     }
 }
 
+public protocol MobileInterfaceUser: InterfaceUser {
+    
+}
+
+public extension MobileInterfaceUser {
+    
+    var klmOperatorOverrides: [String: Double] {
+        [
+            // Mobile-specific additions; Lee et al. 2015
+            "T": 0.31,
+            "P": 0.43,
+            "D": 0.17,
+            "F": 0.11,
+        ]
+    }
+    // Mobile a and b; Lee et al. 2015
+    var fittsA: Double { 0.1035 }
+    var fittsB: Double { 0.1257 }
+}
+
 // MARK: - Fitts' Law variant traits  -----------------------------------------
 
 /// 1) Shannon formulation (already the default): ID = log2(D/W + 1)
@@ -230,6 +250,10 @@ public struct DesktopUser: MouseInterfaceUser {
 public struct WatchShannonUser: WearableInterfaceUser, ShannonFittsUser {}
 
 public struct WatchUser: WatchInterfaceUser {
+    public init() {}
+}
+
+public struct MobileUser: MobileInterfaceUser {
     public init() {}
 }
 /// Wearable + Original Fitts
