@@ -17,6 +17,21 @@ public enum KLMError: Error, CustomStringConvertible, Equatable {
     }
 }
 
+/// Unified operator spec that includes time and human-friendly metadata
+public struct OperatorInfo: Equatable {
+    public let code: String            // canonical token, e.g., "K", "P", "R"
+    public let time: Double            // baseline time in seconds
+    public let name: String            // short label (e.g., "Keystroke")
+    public let longDescription: String // longer description
+
+    public init(code: String, time: Double, name: String, longDescription: String) {
+        self.code = code.uppercased()
+        self.time = time
+        self.name = name
+        self.longDescription = longDescription
+    }
+}
+
 // MARK: - Base trait
 public protocol InterfaceUser {
     /// Per-operator times (seconds). Keys are compared UPPERCASED.
@@ -29,6 +44,9 @@ public protocol InterfaceUser {
     /// Override or extend operator timings. Keys are compared UPPERCASED.
     var klmOperatorOverrides: [String: Double] { get }
     
+    /// Override or extend full operator specifications (time + metadata).
+    var operatorInfoOverrides: [OperatorInfo] { get }
+
     /// Index of Difficulty (ID) function. Default = Shannon formulation.
     func indexOfDifficulty(distance: Double, width: Double) -> Double
 
@@ -39,12 +57,22 @@ public protocol InterfaceUser {
 
 // MARK: - Default implementation (desktop baseline + Shannon ID)
 public extension InterfaceUser {
-    // Basic KLM operators; Kieras 1993
-    var baseKLMOperatorTimes: [String: Double] {
+    // Basic KLM operators as unified specs (time + metadata)
+    var baseOperatorInfos: [OperatorInfo] {
         [
-            "M": 1.2,
-            "H": 0.40,
+            OperatorInfo(code: "M", time: 1.20, name: "Mental Preparation", longDescription: "Cognitive preparation or decision step before execution."),
+            OperatorInfo(code: "H", time: 0.40, name: "Homing", longDescription: "Move hands between devices or device and eyes."),
+            // Response token baseline when explicit seconds are not provided
+            OperatorInfo(code: "R", time: 0.0, name: "System Response", longDescription: "Waiting time for the system to respond; specify as R(seconds) to override."),
+            
         ]
+    }
+
+    /// Derive the legacy base time table from specs for internal use/merging
+    var baseKLMOperatorTimes: [String: Double] {
+        var dict: [String: Double] = [:]
+        for info in baseOperatorInfos { dict[info.code] = info.time }
+        return dict
     }
     
     // Mouse a and b; Card et al, 1978; Is this appropriate? Yes, for now.
@@ -56,11 +84,25 @@ public extension InterfaceUser {
 
     /// Final operator table = base + overrides (overrides replace on key match, add otherwise)
     var klmOperatorTimes: [String: Double] {
-        var merged = baseKLMOperatorTimes
+        // Start from merged operator infos (base + operatorInfoOverrides)
+        var merged: [String: Double] = [:]
+        for info in allOperatorInfos { merged[info.code] = info.time }
+        // Then apply any time-only overrides last for final say
         for (k, v) in klmOperatorOverrides {
             merged[k.uppercased()] = v
         }
         return merged
+    }
+
+    /// Default: no operator info overrides
+    var operatorInfoOverrides: [OperatorInfo] { [] }
+
+    /// Final merged operator infos = base + overrides
+    var allOperatorInfos: [OperatorInfo] {
+        var dict: [String: OperatorInfo] = [:]
+        for info in baseOperatorInfos { dict[info.code] = info }
+        for info in operatorInfoOverrides { dict[info.code] = info }
+        return Array(dict.values)
     }
 
     /// Shannon formulation (most common in HCI):
@@ -137,21 +179,25 @@ public extension InterfaceUser {
          .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
          .filter { !$0.isEmpty }
     }
+    
+    /// Lookup metadata for a raw token (normalizes parameterized tokens like P_distance:..;width:.. and R(seconds))
+    func operatorInfo(for token: String) -> OperatorInfo? {
+        let u = token.uppercased()
+        if u.hasPrefix("P_") { return allOperatorInfos.first { $0.code == "P" } }
+        if u.hasPrefix("R(") && u.hasSuffix(")") { return allOperatorInfos.first { $0.code == "R" } }
+        return allOperatorInfos.first { $0.code == u }
+    }
 }
 
 public protocol MouseKeyboardInterfaceUser : InterfaceUser {}
 public extension MouseKeyboardInterfaceUser {
-    // Mouse a and b; Card et al, 1978
-    var fittsA: Double { 1.03 }
-    var fittsB: Double { 0.096 }
-    
-    // Basic KLM operators; Kieras 1993
-    var klmOperatorOverrides: [String: Double] {
+    var operatorInfoOverrides: [OperatorInfo] {
         [
-            "K": 0.28,
-            "P": 1.10,
-            "H": 0.40,
-            "B": 0.1
+            // Common desktop ops
+            OperatorInfo(code: "K", time: 0.28, name: "Keystroke", longDescription: "Press a key on the keyboard or equivalent discrete input."),
+            OperatorInfo(code: "P", time: 1.10, name: "Point", longDescription: "Move pointing device to a target (Fitts-based when parameterized)."),
+            OperatorInfo(code: "B", time: 0.10, name: "Button Press", longDescription: "Press a physical/on-device button distinct from a key or tap."),
+            
         ]
     }
 }
@@ -177,22 +223,14 @@ public protocol WatchInterfaceUser: WearableInterfaceUser {
 
 public extension WatchInterfaceUser {
     
-    var klmOperatorOverrides: [String: Double] {
+    var operatorInfoOverrides: [OperatorInfo] {
         [
-            // Wearable-specific additions; Al-Megren, 2018
-            // Tap
-            "T": 0.28,
-            // Double Tap
-            "TT": 0.43,
-            // Tap and Hold
-            "TH": 0.78,
-            // Press - refers to on-device buttons
-            
-            // Initial action - raising the non-dominant wrist to field of view
-            "I": 0.82,
-            "H": 0.57,
-            // Silencing gesture -
-            "S": 0.75
+            OperatorInfo(code: "T", time: 0.28, name: "Tap", longDescription: "Single tap on watch screen."),
+            OperatorInfo(code: "TT", time: 0.43, name: "Double Tap", longDescription: "Two quick taps on watch screen."),
+            OperatorInfo(code: "TH", time: 0.78, name: "Tap and Hold", longDescription: "Tap and hold on watch screen."),
+            OperatorInfo(code: "I", time: 0.82, name: "Initial Raise", longDescription: "Raise wrist to field of view."),
+            OperatorInfo(code: "H", time: 0.57, name: "Homing", longDescription: "Move hand to interact with watch."),
+            OperatorInfo(code: "S", time: 0.75, name: "Silencing Gesture", longDescription: "Gesture to silence/dismiss alerts on watch.")
         ]
     }
 }
@@ -203,19 +241,17 @@ public protocol MobileInterfaceUser: InterfaceUser {
 
 public extension MobileInterfaceUser {
     
-    var klmOperatorOverrides: [String: Double] {
+    var operatorInfoOverrides: [OperatorInfo] {
         [
-            // Mobile-specific additions; Lee et al. 2015
-            // Tap
-            "T": 0.31,
-            // Point
-            "P": 0.43,
-            // Drag
-            "D": 0.17,
-            // Flick (left to right) (right to left is 0.12)
-            "F": 0.11,
+            // Common desktop ops
+            OperatorInfo(code: "T", time: 0.31, name: "Tap", longDescription: "Press a key on the keyboard or equivalent discrete input."),
+            OperatorInfo(code: "P", time: 0.43, name: "Point", longDescription: "Move pointing device to a target (Fitts-based when parameterized)."),
+            OperatorInfo(code: "D", time: 0.17, name: "Drag", longDescription: "Drag"),
+            OperatorInfo(code: "F", time: 0.11, name: "Flick", longDescription: "Flick (left to right) (right to left is 0.12)"),
+            
         ]
     }
+    
     // Mobile a and b; Lee et al. 2015
     var fittsA: Double { 0.1035 }
     var fittsB: Double { 0.1257 }
