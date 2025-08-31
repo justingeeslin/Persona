@@ -270,5 +270,3 @@ public struct WatchUser: WatchInterfaceUser {
 public struct MobileUser: MobileInterfaceUser {
     public init() {}
 }
-/// Wearable + Original Fitts
-public struct WatchOriginalFittsUser: WearableInterfaceUser, OriginalFittsUser {}
